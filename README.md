@@ -19,16 +19,25 @@ use flake path:.#direnv
 {
   inputs = {
     nixpkgs.url = "nixpkgs";
+    systems.url = "systems";
     flake-parts.url = "flake-parts";
     minimal-shell.url = "github:tie-infra/minimal-shell";
   };
   outputs = inputs: inputs.flake-parts.lib.mkFlake { inherit inputs; } {
-    systems = [ "x86_64-linux" "aarch64-linux" ];
+    systems = import inputs.systems;
     imports = [ inputs.minimal-shell.flakeModule ];
     perSystem = { pkgs, ... }: {
-      minimalShells.direnv = with pkgs; [
-        nixpkgs-fmt
-      ];
+      minimalShells = {
+        # Add packages to PATH.
+        direnv = with pkgs; [
+          nixpkgs-fmt
+        ];
+        # Set additional environment variables.
+        direnv-nocolor = {
+          packages = [ pkgs.nixpkgs-fmt ];
+          exports = [ "NO_COLOR=1" ];
+        };
+      };
     };
   };
 }
