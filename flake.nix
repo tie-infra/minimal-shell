@@ -1,8 +1,23 @@
 {
-  description = "A module for flake-parts to set up minimal devShells outputs.";
-  outputs = _:
-    let flakeModule = import ./flake-module.nix; in {
-      inherit flakeModule;
-      flakeModules.default = flakeModule;
+  description = "A flake to set up minimal devShells outputs with flake-parts module.";
+
+  inputs = {
+    nixpkgs-lib.url = "github:NixOS/nixpkgs/nixos-unstable?dir=lib";
+  };
+
+  outputs = inputs: {
+    lib = import ./lib.nix {
+      lib = import inputs.nixpkgs-lib;
     };
+
+    overlay = inputs.self.overlays.default;
+    overlays.default = final: prev: {
+      mkMinimalShell = final.callPackage ./package.nix {
+        minimal-shell-lib = inputs.self.lib;
+      };
+    };
+
+    flakeModule = inputs.self.flakeModules.default;
+    flakeModules.default = ./flake-module.nix;
+  };
 }
