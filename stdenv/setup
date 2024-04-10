@@ -1,0 +1,28 @@
+# Nix: src/nix/get-env.sh expects us to declare a variable for each output.
+# See also https://github.com/NixOS/nix/pull/10455
+for outputName in "${!outputs[@]}"; do
+	declare -- "$outputName=${outputs[$outputName]}"
+done
+
+# Nix sets these in src/nix/get-env.sh.
+export -n IN_NIX_SHELL dontAddDisableDepTrack
+
+# Other Nix stuff.
+export -n NIX_ATTRS_JSON_FILE NIX_ATTRS_SH_FILE NIX_BUILD_CORES NIX_STORE
+
+# Unset PATH that Nix set for us.
+if [ "$PATH" = /path-not-set ]; then
+	unset -v PATH
+fi
+
+if [ "${#exports[@]}" -ne 0 ]; then
+	export -- "${exports[@]}"
+fi
+
+export PATH
+
+for package in "${packages[@]}"; do
+	if [ -d "$package/bin" ]; then
+		PATH=$package/bin${PATH:+:}${PATH-}
+	fi
+done

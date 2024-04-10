@@ -8,7 +8,7 @@ Example:
 <summary>.envrc</summary>
 
 ```
-use flake path:.#direnv
+use flake
 ```
 </details>
 
@@ -25,11 +25,11 @@ use flake path:.#direnv
   };
   outputs = inputs: inputs.flake-parts.lib.mkFlake { inherit inputs; } {
     systems = import inputs.systems;
-    imports = [ inputs.minimal-shell.flakeModule ];
-    perSystem = { pkgs, ... }: {
+    imports = [ inputs.minimal-shell.flakeModules.default ];
+    perSystem = { system, pkgs, ... }: {
       minimalShells = {
         # Add packages to PATH.
-        direnv = with pkgs; [
+        default = with pkgs; [
           nixpkgs-fmt
         ];
         # Set additional environment variables.
@@ -37,6 +37,16 @@ use flake path:.#direnv
           packages = [ pkgs.nixpkgs-fmt ];
           exports = [ "NO_COLOR=1" ];
         };
+      };
+      # Use with Nixpkgs overlay.
+      _module.args.pkgs = import inputs.nixpkgs {
+        inherit system;
+        overlays = [ inputs.minimal-shell.overlays.default ];
+      };
+      devShells.direnv-python = pkgs.mkMinimalShell {
+        name = "direnv-python";
+        packages = [ pkgs.python3 ];
+        exports = [ "PYTHONDONTWRITEBYTECODE=1" ];
       };
     };
   };
