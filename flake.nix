@@ -7,7 +7,7 @@
 
   outputs = inputs: {
     lib = import ./lib.nix {
-      lib = import inputs.nixpkgs-lib;
+      inherit (inputs.nixpkgs-lib) lib;
     };
 
     overlay = inputs.self.overlays.default;
